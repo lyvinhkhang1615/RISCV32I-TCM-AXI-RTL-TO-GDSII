@@ -10,3 +10,7 @@ Unlike flat single-macro/single-cycle implementations, this design addresses cor
 * **Power Distribution Network (PDN):** Robust power rings, straps, and IR-drop mitigation for simultaneous multi-bank accesses.
 * **Clock Tree Synthesis (CTS):** Balancing clock skew and latency across thousands of flip-flops and 8 distributed memory clock pins.
 * **Physical Verification & Signoff:** Parasitic extraction (RC extraction) and antenna violation mitigation on long metal routing paths.
+## Acknowledgements & References
+
+* **RISC-V Core RTL:** The pipelined 32-bit RISC-V core used in this project is based on the open-source implementation by [ultraembedded/riscv](https://github.com/ultraembedded/riscv), licensed under the Apache License 2.0.
+* **Top-Level Wrapper & TCM Memory:** The multi-bank SRAM integration, top-level integration (`riscv_tcm_wrapper`), and ASIC Physical Design flow (RTL-to-GDSII) were developed and implemented by me using Cadence EDA tools and the GPDK045 process node.
