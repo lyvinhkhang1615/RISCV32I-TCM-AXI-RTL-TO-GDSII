@@ -1,4 +1,4 @@
-# RISC-V-Pipelined-Octa-TCM-PD
+# RISCV32I-TCM-AXI-RTL-TO-GDSII
 RTL-to-GDSII Physical Design flow for a 32-bit Pipelined RISC-V SoC integrating an 8-Bank TCM Memory architecture using Cadence Encounter/Innovus (GPDK045).
 # 32-bit Pipelined RISC-V SoC — 8-Bank TCM Physical Design (RTL-to-GDSII)
 
