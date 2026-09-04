@@ -1,0 +1,103 @@
+# =============================================================================
+# 1. KHAI BÁO BIẾN ĐƯỜNG DẪN THƯ MỤC
+# =============================================================================
+# Thư mục gốc chứa GPDK045
+set GPDK_DIR "/home/buet/cadence/EDI/share/FoundationFlows/EXAMPLES/PROTO/LIBS/GPDK/LIBS/GPDK045"
+set LIB_DIR  "${GPDK_DIR}/timing"
+set LEF_DIR  "${GPDK_DIR}/lef"
+
+# Đường dẫn RTL
+set PRJ_DIR  "/home/buet/Documents/RISCV32I_TCM_AXI"
+set CORE_DIR "${PRJ_DIR}/RTL/riscv_core"
+set TOP_DIR  "${PRJ_DIR}/RTL/top_tcm_wrapper"
+
+set SDC_DIR  "constraint_before_syn"
+set OUT_DIR  "output"
+
+file mkdir $OUT_DIR
+
+# =============================================================================
+# 2. KHAI BÁO THƯ VIỆN PHYSICAL (LEF) VÀ TIMING (.LIB)
+# =============================================================================
+set_attribute lib_search_path $LIB_DIR /
+
+# gsclib045.lef nằm ở GPDK_DIR, MEM2_2048X32.lef nằm ở LEF_DIR
+set_attribute lef_library [list \
+    ${GPDK_DIR}/gsclib045.lef \
+    ${LEF_DIR}/MEM2_2048X32.lef \
+] /
+
+set_attribute library [list \
+    slow.lib \
+    MEM2_2048X32_slow.lib \
+] /
+
+# Khai báo tìm file `include "riscv_defs.v"
+set_attribute hdl_search_path [list ${CORE_DIR} ${TOP_DIR}] /
+
+# =============================================================================
+# 3. ĐỌC TẤT CẢ FILE RTL VERILOG
+# =============================================================================
+read_hdl -v2001 [list \
+    ${CORE_DIR}/riscv_defs.v \
+    ${CORE_DIR}/riscv_alu.v \
+    ${CORE_DIR}/riscv_exec.v \
+    ${CORE_DIR}/riscv_decoder.v \
+    ${CORE_DIR}/riscv_decode.v \
+    ${CORE_DIR}/riscv_fetch.v \
+    ${CORE_DIR}/riscv_pipe_ctrl.v \
+    ${CORE_DIR}/riscv_regfile.v \
+    ${CORE_DIR}/riscv_csr_regfile.v \
+    ${CORE_DIR}/riscv_csr.v \
+    ${CORE_DIR}/riscv_divider.v \
+    ${CORE_DIR}/riscv_multiplier.v \
+    ${CORE_DIR}/riscv_lsu.v \
+    ${CORE_DIR}/riscv_mmu.v \
+    ${CORE_DIR}/riscv_issue.v \
+    ${CORE_DIR}/riscv_core.v \
+    ${TOP_DIR}/dport_axi.v \
+    ${TOP_DIR}/dport_mux.v \
+    ${TOP_DIR}/tcm_mem_ram.v \
+    ${TOP_DIR}/tcm_mem_pmem.v \
+    ${TOP_DIR}/tcm_mem.v \
+    ${TOP_DIR}/riscv_tcm_wrapper.v \
+]
+
+# =============================================================================
+# 4. ELABORATE THIẾT KẾ TOP-LEVEL
+# =============================================================================
+elaborate riscv_tcm_wrapper
+
+check_design -unresolved
+
+# =============================================================================
+# 5. ĐỌC RÀNG BUỘC THỜI GIAN (SDC)
+# =============================================================================
+read_sdc ${SDC_DIR}/constraint_before_syn.sdc
+
+# =============================================================================
+# 6. TỔNG HỢP VÀ TỐI ƯU HÓA (SYNTHESIS & OPTIMIZATION)
+# =============================================================================
+# Bước 1: Dịch RTL sang các cổng Generic logic
+synthesize -to_generic -effort high
+
+# Bước 2: Map logic vào thư viện công nghệ GPDK045 & Macro
+synthesize -to_mapped -effort high
+
+# Bước 3: Tối ưu lặp thêm để fix vi phạm timing / DRC (nếu cần)
+synthesize -incremental -effort high
+
+# =============================================================================
+# 7. XUẤT NETLIST VÀ SDC VÀO THƯ MỤC output
+# =============================================================================
+write_hdl > ${OUT_DIR}/riscv_tcm_netlist.v
+write_sdc > ${OUT_DIR}/riscv_master.sdc
+
+# =============================================================================
+# 8. XUẤT CÁC BÁO CÁO (REPORTS) VÀO THƯ MỤC output
+# =============================================================================
+report timing > ${OUT_DIR}/reports_timing.rpt
+report area   > ${OUT_DIR}/reports_area.rpt
+report power  > ${OUT_DIR}/reports_power.rpt
+report qor    > ${OUT_DIR}/reports_qor.rpt
+report gates  > ${OUT_DIR}/reports_gates.rpt
